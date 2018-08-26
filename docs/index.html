@@ -11789,6 +11789,8 @@ div#notebook {
 <span class="kn">import</span> <span class="nn">lightgbm</span> <span class="k">as</span> <span class="nn">lgb</span>
 <span class="kn">from</span> <span class="nn">lightgbm</span> <span class="k">import</span> <span class="n">LGBMRegressor</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">ElasticNet</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">cross_val_score</span>
+<span class="kn">import</span> <span class="nn">time</span> 
 </pre></div>
 
 </div>
@@ -11801,7 +11803,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">plot_feature</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span><span class="n">dtrain</span><span class="p">,</span><span class="n">top</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># this function is only for plotting</span>
+<span class="k">def</span> <span class="nf">plot_feature</span><span class="p">(</span><span class="n">alg</span><span class="p">,</span><span class="n">dtrain</span><span class="p">,</span><span class="n">top</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
     <span class="n">feat_imp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">alg</span><span class="o">.</span><span class="n">feature_importances_</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">dtrain</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">top</span><span class="p">]</span>
     <span class="n">feat_imp</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;top </span><span class="si">{}</span><span class="s1"> Feature Importances&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Feature Importance Score&#39;</span><span class="p">)</span>
@@ -11815,44 +11818,56 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
+<div class="prompt input_prompt">In&nbsp;[41]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># model evalutaion</span>
+<span class="k">def</span> <span class="nf">eva</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">nfold</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">scores</span><span class="o">=</span><span class="n">cross_val_score</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cv scores is </span><span class="si">{0}</span><span class="s2"> cv-std </span><span class="si">{1}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">scores</span><span class="o">.</span><span class="n">std</span><span class="p">()))</span>
+    <span class="n">train_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
+    <span class="n">train_elaspe</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">train_start_time</span>
+          
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;training time </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_elaspe</span><span class="p">))</span>
+    <span class="n">test_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="n">y_pred</span><span class="p">)</span>
+    <span class="n">test_elaspe</span> <span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">test_start_time</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;test time </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">test_elaspe</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;test mean squared error </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">score</span><span class="p">))</span>
+    
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Data-Preprocessing">Data Preprocessing<a class="anchor-link" href="#Data-Preprocessing">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">house</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;../data/data.csv&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># preprocess</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># date</span>
+<span class="c1"># date</span>
 <span class="n">house</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>        <span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">strdate</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">strdate</span><span class="p">,</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">T%H%M%S&#39;</span><span class="p">),</span> <span class="n">house</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]))</span>
 <span class="n">house</span><span class="p">[</span><span class="s1">&#39;sale_year&#39;</span><span class="p">]</span>   <span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">date</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">house</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]))</span>
 <span class="n">house</span><span class="p">[</span><span class="s1">&#39;sale_month&#39;</span><span class="p">]</span>  <span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">date</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]))</span>
 <span class="n">house</span><span class="p">[</span><span class="s1">&#39;sale_weekday&#39;</span><span class="p">]</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">date</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">dayofweek</span><span class="p">,</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="p">))</span>
 <span class="c1"># location </span>
-<span class="n">house</span><span class="p">[</span><span class="s1">&#39;zipcode&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;zipcode&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+<span class="n">house</span><span class="p">[</span><span class="s1">&#39;zipcode&#39;</span><span class="p">]</span>     <span class="o">=</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;zipcode&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
 <span class="k">del</span> <span class="n">house</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> 
-<span class="n">house</span><span class="p">[</span><span class="s1">&#39;log_price&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="c1"># log_normal distribution plot</span>
+<span class="n">house</span><span class="p">[</span><span class="s1">&#39;log_price&#39;</span><span class="p">]</span>   <span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">house</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="c1"># log_normal distribution plot</span>
 </pre></div>
 
 </div>
@@ -11860,18 +11875,16 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
 <div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Train Test Split </span>
-</pre></div>
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Train-Test-Split">Train Test Split<a class="anchor-link" href="#Train-Test-Split">&#182;</a></h1><p>1/3 as test data<br>
+2/3 as train data</p>
 
 </div>
 </div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -11893,50 +11906,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="BaseLine-Model">BaseLine Model<a class="anchor-link" href="#BaseLine-Model">&#182;</a></h1><h3 id="1.-untuned-tree-based-model-(random-forest)">1. untuned tree-based model (random forest)<a class="anchor-link" href="#1.-untuned-tree-based-model-(random-forest)">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rf_model</span><span class="o">=</span><span class="n">RandomForestRegressor</span><span class="p">()</span>
-<span class="n">rf_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
-<span class="n">y_pred</span><span class="o">=</span><span class="n">rf_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-<span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="n">y_pred</span><span class="p">)</span> <span class="c1"># untuned random forest results</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-<div class="prompt output_prompt">Out[8]:</div>
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>0.03658945029321862</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="2.-tunned-linear-model---Elastic-Net">2. tunned linear model - Elastic Net<a class="anchor-link" href="#2.-tunned-linear-model---Elastic-Net">&#182;</a></h3>
+<h1 id="BaseLine-Model">BaseLine Model<a class="anchor-link" href="#BaseLine-Model">&#182;</a></h1><h3 id="1.-tunned-linear-model---Elastic-Net">1. tunned linear model - Elastic Net<a class="anchor-link" href="#1.-tunned-linear-model---Elastic-Net">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -11974,10 +11944,10 @@ $$\alpha = x + y \space and \space ratio = \frac{x}{  (x + y)} $$</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[47]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">elastic_model</span> <span class="o">=</span> <span class="n">ElasticNet</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">elastic_model</span> <span class="o">=</span> <span class="n">ElasticNet</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -11987,317 +11957,19 @@ $$\alpha = x + y \space and \space ratio = \frac{x}{  (x + y)} $$</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[63]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">param_test1</span> <span class="o">=</span> <span class="p">{</span>
-     <span class="s2">&quot;alpha&quot;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.2</span><span class="p">],</span>
-    <span class="s1">&#39;l1_ratio&#39;</span><span class="p">:[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">param_test</span> <span class="o">=</span> <span class="p">{</span>
+     <span class="s2">&quot;alpha&quot;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.1</span><span class="p">],</span>
+    <span class="s1">&#39;l1_ratio&#39;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
     <span class="s1">&#39;fit_intercept&#39;</span><span class="p">:</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="kc">False</span><span class="p">],</span>
     <span class="s1">&#39;normalize&#39;</span><span class="p">:[</span><span class="kc">True</span><span class="p">,</span><span class="kc">False</span><span class="p">]</span>
 <span class="p">}</span>
-<span class="n">gsearch1</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">elastic_model</span><span class="p">,</span> 
-<span class="n">param_grid</span> <span class="o">=</span> <span class="n">param_test1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">iid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-<span class="n">gsearch1</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
-<span class="n">gsearch1</span><span class="o">.</span><span class="n">grid_scores_</span><span class="p">,</span> <span class="n">gsearch1</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">gsearch1</span><span class="o">.</span><span class="n">best_score_</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-<div class="prompt"></div>
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Fitting 5 folds for each of 36 candidates, totalling 180 fits
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-<div class="prompt"></div>
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>[Parallel(n_jobs=4)]: Done   1 tasks      | elapsed:    1.8s
-[Parallel(n_jobs=4)]: Done   2 tasks      | elapsed:    2.6s
-[Parallel(n_jobs=4)]: Done   3 tasks      | elapsed:    3.4s
-[Parallel(n_jobs=4)]: Done   4 tasks      | elapsed:    4.6s
-[Parallel(n_jobs=4)]: Done   5 tasks      | elapsed:    4.7s
-[Parallel(n_jobs=4)]: Done   6 tasks      | elapsed:    4.8s
-[Parallel(n_jobs=4)]: Done   7 tasks      | elapsed:    4.8s
-[Parallel(n_jobs=4)]: Done   8 tasks      | elapsed:    4.9s
-[Parallel(n_jobs=4)]: Done   9 tasks      | elapsed:    4.9s
-[Parallel(n_jobs=4)]: Done  10 tasks      | elapsed:    5.0s
-[Parallel(n_jobs=4)]: Done  11 tasks      | elapsed:    5.1s
-[Parallel(n_jobs=4)]: Done  12 tasks      | elapsed:    5.2s
-[Parallel(n_jobs=4)]: Done  13 tasks      | elapsed:    5.8s
-[Parallel(n_jobs=4)]: Done  14 tasks      | elapsed:    5.9s
-[Parallel(n_jobs=4)]: Done  15 tasks      | elapsed:    6.4s
-[Parallel(n_jobs=4)]: Done  16 tasks      | elapsed:    7.3s
-[Parallel(n_jobs=4)]: Done  17 tasks      | elapsed:    8.4s
-[Parallel(n_jobs=4)]: Done  18 tasks      | elapsed:    8.6s
-[Parallel(n_jobs=4)]: Done  19 tasks      | elapsed:    8.7s
-[Parallel(n_jobs=4)]: Done  20 tasks      | elapsed:    8.7s
-[Parallel(n_jobs=4)]: Done  21 tasks      | elapsed:    8.8s
-[Parallel(n_jobs=4)]: Done  22 tasks      | elapsed:    8.9s
-[Parallel(n_jobs=4)]: Done  23 tasks      | elapsed:    9.0s
-[Parallel(n_jobs=4)]: Done  24 tasks      | elapsed:    9.7s
-[Parallel(n_jobs=4)]: Done  25 tasks      | elapsed:   11.0s
-[Parallel(n_jobs=4)]: Done  26 tasks      | elapsed:   11.7s
-[Parallel(n_jobs=4)]: Done  27 tasks      | elapsed:   11.8s
-[Parallel(n_jobs=4)]: Done  28 tasks      | elapsed:   12.5s
-[Parallel(n_jobs=4)]: Done  29 tasks      | elapsed:   13.3s
-[Parallel(n_jobs=4)]: Done  30 tasks      | elapsed:   13.4s
-[Parallel(n_jobs=4)]: Done  31 tasks      | elapsed:   13.7s
-[Parallel(n_jobs=4)]: Done  32 tasks      | elapsed:   13.9s
-[Parallel(n_jobs=4)]: Done  33 tasks      | elapsed:   14.4s
-[Parallel(n_jobs=4)]: Done  34 tasks      | elapsed:   14.4s
-[Parallel(n_jobs=4)]: Done  35 tasks      | elapsed:   15.0s
-[Parallel(n_jobs=4)]: Done  36 tasks      | elapsed:   15.3s
-[Parallel(n_jobs=4)]: Done  37 tasks      | elapsed:   15.8s
-[Parallel(n_jobs=4)]: Done  38 tasks      | elapsed:   15.9s
-[Parallel(n_jobs=4)]: Done  39 tasks      | elapsed:   16.1s
-[Parallel(n_jobs=4)]: Done  40 tasks      | elapsed:   16.3s
-[Parallel(n_jobs=4)]: Done  41 tasks      | elapsed:   17.0s
-[Parallel(n_jobs=4)]: Done  42 tasks      | elapsed:   17.0s
-[Parallel(n_jobs=4)]: Done  43 tasks      | elapsed:   17.7s
-[Parallel(n_jobs=4)]: Done  44 tasks      | elapsed:   18.8s
-[Parallel(n_jobs=4)]: Done  45 tasks      | elapsed:   21.5s
-[Parallel(n_jobs=4)]: Done  46 tasks      | elapsed:   21.6s
-[Parallel(n_jobs=4)]: Done  47 tasks      | elapsed:   22.2s
-[Parallel(n_jobs=4)]: Done  48 tasks      | elapsed:   22.3s
-[Parallel(n_jobs=4)]: Done  49 tasks      | elapsed:   22.6s
-[Parallel(n_jobs=4)]: Done  50 tasks      | elapsed:   22.6s
-[Parallel(n_jobs=4)]: Done  51 tasks      | elapsed:   23.1s
-[Parallel(n_jobs=4)]: Done  52 tasks      | elapsed:   23.2s
-[Parallel(n_jobs=4)]: Done  53 tasks      | elapsed:   23.5s
-[Parallel(n_jobs=4)]: Done  54 tasks      | elapsed:   23.6s
-[Parallel(n_jobs=4)]: Done  55 tasks      | elapsed:   23.8s
-[Parallel(n_jobs=4)]: Done  56 tasks      | elapsed:   24.0s
-[Parallel(n_jobs=4)]: Done  57 tasks      | elapsed:   24.3s
-[Parallel(n_jobs=4)]: Done  58 tasks      | elapsed:   24.3s
-[Parallel(n_jobs=4)]: Done  59 tasks      | elapsed:   24.6s
-[Parallel(n_jobs=4)]: Done  60 tasks      | elapsed:   24.8s
-[Parallel(n_jobs=4)]: Done  61 tasks      | elapsed:   26.1s
-[Parallel(n_jobs=4)]: Done  62 tasks      | elapsed:   26.1s
-[Parallel(n_jobs=4)]: Done  63 tasks      | elapsed:   26.3s
-[Parallel(n_jobs=4)]: Done  64 tasks      | elapsed:   26.4s
-[Parallel(n_jobs=4)]: Done  65 tasks      | elapsed:   27.3s
-[Parallel(n_jobs=4)]: Done  66 tasks      | elapsed:   27.5s
-[Parallel(n_jobs=4)]: Done  67 tasks      | elapsed:   27.5s
-[Parallel(n_jobs=4)]: Done  68 tasks      | elapsed:   27.6s
-[Parallel(n_jobs=4)]: Done  69 tasks      | elapsed:   27.7s
-[Parallel(n_jobs=4)]: Done  70 tasks      | elapsed:   27.8s
-[Parallel(n_jobs=4)]: Done  71 tasks      | elapsed:   27.8s
-[Parallel(n_jobs=4)]: Done  72 tasks      | elapsed:   27.9s
-[Parallel(n_jobs=4)]: Done  73 tasks      | elapsed:   27.9s
-[Parallel(n_jobs=4)]: Done  74 tasks      | elapsed:   28.6s
-[Parallel(n_jobs=4)]: Done  75 tasks      | elapsed:   28.7s
-[Parallel(n_jobs=4)]: Done  76 tasks      | elapsed:   28.8s
-[Parallel(n_jobs=4)]: Done  77 tasks      | elapsed:   28.9s
-[Parallel(n_jobs=4)]: Done  78 tasks      | elapsed:   29.0s
-[Parallel(n_jobs=4)]: Done  79 tasks      | elapsed:   29.1s
-[Parallel(n_jobs=4)]: Done  80 tasks      | elapsed:   29.2s
-[Parallel(n_jobs=4)]: Done  81 tasks      | elapsed:   29.3s
-[Parallel(n_jobs=4)]: Done  82 tasks      | elapsed:   29.4s
-[Parallel(n_jobs=4)]: Done  83 tasks      | elapsed:   29.5s
-[Parallel(n_jobs=4)]: Done  84 tasks      | elapsed:   29.7s
-[Parallel(n_jobs=4)]: Done  85 tasks      | elapsed:   29.7s
-[Parallel(n_jobs=4)]: Done  86 tasks      | elapsed:   29.8s
-[Parallel(n_jobs=4)]: Done  87 tasks      | elapsed:   29.8s
-[Parallel(n_jobs=4)]: Done  88 tasks      | elapsed:   29.8s
-[Parallel(n_jobs=4)]: Done  89 tasks      | elapsed:   29.9s
-[Parallel(n_jobs=4)]: Done  90 tasks      | elapsed:   29.9s
-[Parallel(n_jobs=4)]: Done  91 tasks      | elapsed:   30.7s
-[Parallel(n_jobs=4)]: Done  92 tasks      | elapsed:   30.8s
-[Parallel(n_jobs=4)]: Done  93 tasks      | elapsed:   30.8s
-[Parallel(n_jobs=4)]: Done  94 tasks      | elapsed:   30.9s
-[Parallel(n_jobs=4)]: Done  95 tasks      | elapsed:   31.5s
-[Parallel(n_jobs=4)]: Done  96 tasks      | elapsed:   31.7s
-[Parallel(n_jobs=4)]: Done  97 tasks      | elapsed:   31.8s
-[Parallel(n_jobs=4)]: Done  98 tasks      | elapsed:   31.9s
-[Parallel(n_jobs=4)]: Done  99 tasks      | elapsed:   32.4s
-[Parallel(n_jobs=4)]: Done 100 tasks      | elapsed:   32.6s
-[Parallel(n_jobs=4)]: Done 101 tasks      | elapsed:   32.6s
-[Parallel(n_jobs=4)]: Done 102 tasks      | elapsed:   32.7s
-[Parallel(n_jobs=4)]: Done 103 tasks      | elapsed:   33.7s
-[Parallel(n_jobs=4)]: Done 104 tasks      | elapsed:   33.9s
-[Parallel(n_jobs=4)]: Done 105 tasks      | elapsed:   34.0s
-[Parallel(n_jobs=4)]: Done 106 tasks      | elapsed:   34.2s
-[Parallel(n_jobs=4)]: Done 107 tasks      | elapsed:   35.4s
-[Parallel(n_jobs=4)]: Done 108 tasks      | elapsed:   35.6s
-[Parallel(n_jobs=4)]: Done 109 tasks      | elapsed:   35.6s
-[Parallel(n_jobs=4)]: Done 110 tasks      | elapsed:   35.8s
-[Parallel(n_jobs=4)]: Done 111 tasks      | elapsed:   36.2s
-[Parallel(n_jobs=4)]: Done 112 tasks      | elapsed:   36.2s
-[Parallel(n_jobs=4)]: Done 113 tasks      | elapsed:   36.3s
-[Parallel(n_jobs=4)]: Done 114 tasks      | elapsed:   36.4s
-[Parallel(n_jobs=4)]: Done 115 tasks      | elapsed:   36.8s
-[Parallel(n_jobs=4)]: Done 116 tasks      | elapsed:   36.8s
-[Parallel(n_jobs=4)]: Done 117 tasks      | elapsed:   36.9s
-[Parallel(n_jobs=4)]: Done 118 tasks      | elapsed:   37.0s
-[Parallel(n_jobs=4)]: Done 119 tasks      | elapsed:   37.3s
-[Parallel(n_jobs=4)]: Done 120 tasks      | elapsed:   37.3s
-[Parallel(n_jobs=4)]: Done 121 tasks      | elapsed:   37.8s
-[Parallel(n_jobs=4)]: Done 122 tasks      | elapsed:   38.1s
-[Parallel(n_jobs=4)]: Done 123 tasks      | elapsed:   38.2s
-[Parallel(n_jobs=4)]: Done 124 tasks      | elapsed:   38.4s
-[Parallel(n_jobs=4)]: Done 125 tasks      | elapsed:   38.8s
-[Parallel(n_jobs=4)]: Done 126 tasks      | elapsed:   39.3s
-[Parallel(n_jobs=4)]: Done 127 tasks      | elapsed:   39.3s
-[Parallel(n_jobs=4)]: Done 128 tasks      | elapsed:   39.4s
-[Parallel(n_jobs=4)]: Done 129 tasks      | elapsed:   39.5s
-[Parallel(n_jobs=4)]: Done 130 tasks      | elapsed:   39.5s
-[Parallel(n_jobs=4)]: Done 131 tasks      | elapsed:   39.6s
-[Parallel(n_jobs=4)]: Done 132 tasks      | elapsed:   39.7s
-[Parallel(n_jobs=4)]: Done 133 tasks      | elapsed:   39.8s
-[Parallel(n_jobs=4)]: Done 134 tasks      | elapsed:   39.9s
-[Parallel(n_jobs=4)]: Done 135 tasks      | elapsed:   40.0s
-[Parallel(n_jobs=4)]: Done 136 tasks      | elapsed:   40.0s
-[Parallel(n_jobs=4)]: Done 137 tasks      | elapsed:   40.1s
-[Parallel(n_jobs=4)]: Done 138 tasks      | elapsed:   40.1s
-[Parallel(n_jobs=4)]: Done 139 tasks      | elapsed:   40.2s
-[Parallel(n_jobs=4)]: Done 140 tasks      | elapsed:   40.2s
-[Parallel(n_jobs=4)]: Done 141 tasks      | elapsed:   40.3s
-[Parallel(n_jobs=4)]: Done 142 tasks      | elapsed:   40.3s
-[Parallel(n_jobs=4)]: Done 143 tasks      | elapsed:   40.4s
-[Parallel(n_jobs=4)]: Done 144 tasks      | elapsed:   40.5s
-[Parallel(n_jobs=4)]: Done 145 tasks      | elapsed:   40.5s
-[Parallel(n_jobs=4)]: Done 146 tasks      | elapsed:   40.6s
-[Parallel(n_jobs=4)]: Done 147 tasks      | elapsed:   40.7s
-[Parallel(n_jobs=4)]: Done 148 tasks      | elapsed:   40.8s
-[Parallel(n_jobs=4)]: Done 149 tasks      | elapsed:   41.1s
-[Parallel(n_jobs=4)]: Done 150 tasks      | elapsed:   41.9s
-[Parallel(n_jobs=4)]: Done 151 tasks      | elapsed:   41.9s
-[Parallel(n_jobs=4)]: Done 152 tasks      | elapsed:   41.9s
-[Parallel(n_jobs=4)]: Done 153 tasks      | elapsed:   42.3s
-[Parallel(n_jobs=4)]: Done 154 tasks      | elapsed:   43.5s
-[Parallel(n_jobs=4)]: Done 155 tasks      | elapsed:   43.6s
-[Parallel(n_jobs=4)]: Done 156 tasks      | elapsed:   43.7s
-[Parallel(n_jobs=4)]: Done 157 tasks      | elapsed:   43.8s
-[Parallel(n_jobs=4)]: Done 158 tasks      | elapsed:   44.4s
-[Parallel(n_jobs=4)]: Done 159 tasks      | elapsed:   44.4s
-[Parallel(n_jobs=4)]: Done 160 tasks      | elapsed:   44.5s
-[Parallel(n_jobs=4)]: Done 161 tasks      | elapsed:   44.6s
-[Parallel(n_jobs=4)]: Done 162 tasks      | elapsed:   44.9s
-[Parallel(n_jobs=4)]: Done 163 tasks      | elapsed:   45.0s
-[Parallel(n_jobs=4)]: Done 164 tasks      | elapsed:   45.1s
-[Parallel(n_jobs=4)]: Done 165 tasks      | elapsed:   45.1s
-[Parallel(n_jobs=4)]: Done 166 tasks      | elapsed:   45.5s
-[Parallel(n_jobs=4)]: Done 167 tasks      | elapsed:   45.5s
-[Parallel(n_jobs=4)]: Done 168 tasks      | elapsed:   45.6s
-[Parallel(n_jobs=4)]: Done 169 tasks      | elapsed:   45.6s
-[Parallel(n_jobs=4)]: Done 170 tasks      | elapsed:   46.0s
-[Parallel(n_jobs=4)]: Done 171 tasks      | elapsed:   46.1s
-[Parallel(n_jobs=4)]: Done 172 tasks      | elapsed:   46.1s
-[Parallel(n_jobs=4)]: Done 173 tasks      | elapsed:   46.2s
-[Parallel(n_jobs=4)]: Done 180 out of 180 | elapsed:   47.0s finished
-C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
-  ConvergenceWarning)
-C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_search.py:761: DeprecationWarning: The grid_scores_ attribute was deprecated in version 0.18 in favor of the more elaborate cv_results_ attribute. The grid_scores_ attribute will not be available from 0.20
-  DeprecationWarning)
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-<div class="prompt output_prompt">Out[10]:</div>
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>([mean: -0.26196, std: 0.00469, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.06781, std: 0.00194, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.06953, std: 0.00201, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.07146, std: 0.00213, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False},
-  mean: -0.13700, std: 0.00451, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.13700, std: 0.00451, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.13793, std: 0.00433, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.13793, std: 0.00433, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.13865, std: 0.00424, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.13865, std: 0.00424, params: {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False},
-  mean: -0.27279, std: 0.00481, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.08800, std: 0.00227, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.10887, std: 0.00246, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.12453, std: 0.00253, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False},
-  mean: -0.13886, std: 0.00432, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.13886, std: 0.00432, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.15767, std: 0.00369, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.15767, std: 0.00369, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.16651, std: 0.00363, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.16651, std: 0.00363, params: {&#39;alpha&#39;: 0.1, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False},
-  mean: -0.27343, std: 0.00482, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.09347, std: 0.00233, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.12469, std: 0.00252, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.27407, std: 0.00482, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.12545, std: 0.00248, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False},
-  mean: -0.14115, std: 0.00424, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: True},
-  mean: -0.14115, std: 0.00424, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
-  mean: -0.16653, std: 0.00364, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: True},
-  mean: -0.16653, std: 0.00364, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 0.5, &#39;normalize&#39;: False},
-  mean: -0.16614, std: 0.00363, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: True},
-  mean: -0.16614, std: 0.00363, params: {&#39;alpha&#39;: 0.2, &#39;fit_intercept&#39;: False, &#39;l1_ratio&#39;: 1, &#39;normalize&#39;: False}],
- {&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.0, &#39;normalize&#39;: False},
- -0.06781044351344419)</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">elastic_model</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">gsearch1</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-<div class="prompt output_prompt">Out[11]:</div>
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>ElasticNet(alpha=0.01, copy_X=True, fit_intercept=True, l1_ratio=0.0,
-      max_iter=1000, normalize=False, positive=False, precompute=False,
-      random_state=None, selection=&#39;cyclic&#39;, tol=0.0001, warm_start=False)</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">elastic_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
-<span class="n">y_pred</span><span class="o">=</span><span class="n">elastic_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-<span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="n">y_pred</span><span class="p">)</span>
+<span class="n">gsearch</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">elastic_model</span><span class="p">,</span> 
+<span class="n">param_grid</span> <span class="o">=</span> <span class="n">param_test</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">iid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">gsearch</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
+<span class="n">gsearch</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">gsearch</span><span class="o">.</span><span class="n">best_score_</span>
 </pre></div>
 
 </div>
@@ -12319,14 +11991,140 @@ C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_sea
 </div>
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[12]:</div>
+<div class="prompt output_prompt">Out[63]:</div>
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>0.06947561889100491</pre>
+<pre>({&#39;alpha&#39;: 0.01, &#39;fit_intercept&#39;: True, &#39;l1_ratio&#39;: 0.01, &#39;normalize&#39;: False},
+ -0.06784174623467382)</pre>
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[64]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">elastic_model</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">gsearch</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+<div class="prompt output_prompt">Out[64]:</div>
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>ElasticNet(alpha=0.01, copy_X=True, fit_intercept=True, l1_ratio=0.01,
+      max_iter=5000, normalize=False, positive=False, precompute=False,
+      random_state=None, selection=&#39;cyclic&#39;, tol=0.0001, warm_start=False)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[65]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">eva</span><span class="p">(</span><span class="n">elastic_model</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+<div class="prompt"></div>
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\linear_model\coordinate_descent.py:491: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Fitting data with very small alpha may cause precision problems.
+  ConvergenceWarning)
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+<div class="prompt"></div>
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>cv scores is -0.06784174623467382 cv-std 0.0019376847820192532 
+training time 2.0255815982818604
+test time 0.015954971313476562
+test mean squared error 0.06952084789456482
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="2.-untuned-tree-based-model-(random-forest)">2. untuned tree-based model (random forest)<a class="anchor-link" href="#2.-untuned-tree-based-model-(random-forest)">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[66]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rf_model</span><span class="o">=</span><span class="n">RandomForestRegressor</span><span class="p">()</span>
+<span class="n">eva</span><span class="p">(</span><span class="n">rf_model</span><span class="p">)</span> <span class="c1"># untuned random forest results</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+<div class="prompt"></div>
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>cv scores is -0.03557005154108559 cv-std 0.0005422235968781241 
+training time 1.3763577938079834
+test time 0.02892470359802246
+test mean squared error 0.03653278481702138
+</pre>
+</div>
 </div>
 
 </div>
@@ -12386,7 +12184,6 @@ topN ← a × len(I) , randN ← b × len(I)<br>
 LightGBM applies Fisher (1958) to find the optimal split over categories as described here. This often performs better than <strong>one-hot encoding</strong>.</p>
 <p><strong>Categorical features</strong> must be encoded as non-negative integers (int) less than Int32.MaxValue (2147483647). It is best to use a <strong>contiguous range of integers</strong>.<br>
 Use categorical_feature to specify the categorical features. Refer to the parameter categorical_feature in Parameters.</p>
-<p>Use <strong>min_data_per_group, cat_smooth</strong> to deal with over-fitting (when #data is small or #category is large).</p>
 <p>For a categorical feature with high cardinality (#category is large), it often works best to treat the feature as numeric, either by simply ignoring the categorical interpretation of the integers or by embedding the categories in a low-dimensional numeric space.</p>
 
 </div>
@@ -12394,7 +12191,7 @@ Use categorical_feature to specify the categorical features. Refer to the parame
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[67]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">lgb_model</span><span class="o">=</span><span class="n">LGBMRegressor</span><span class="p">()</span>
@@ -12430,7 +12227,7 @@ Use categorical_feature to specify the categorical features. Refer to the parame
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[13]:</div>
+<div class="prompt output_prompt">Out[67]:</div>
 
 
 
@@ -12453,7 +12250,7 @@ Use categorical_feature to specify the categorical features. Refer to the parame
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[68]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">lgbm_train</span> <span class="o">=</span> <span class="n">lgb</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
@@ -12469,7 +12266,7 @@ Use categorical_feature to specify the categorical features. Refer to the parame
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[69]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">cv_results</span> <span class="o">=</span> <span class="n">lgb</span><span class="o">.</span><span class="n">cv</span><span class="p">(</span><span class="n">train_set</span><span class="o">=</span><span class="n">lgbm_train</span><span class="p">,</span>
@@ -12521,12 +12318,12 @@ Use categorical_feature to specify the categorical features. Refer to the parame
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[70]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">optimum_boost_rounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">cv_results</span><span class="p">[</span><span class="s1">&#39;l2-mean&#39;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Optimum boost rounds = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">optimum_boost_rounds</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Best LGBM CV result = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cv_results</span><span class="p">[</span><span class="s1">&#39;l2-mean&#39;</span><span class="p">])))</span> <span class="c1">#cv_agg&#39;s mape: 0.0418631 + 0.000355628</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Best LGBM CV result = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cv_results</span><span class="p">[</span><span class="s1">&#39;l2-mean&#39;</span><span class="p">])))</span> 
 </pre></div>
 
 </div>
@@ -12562,14 +12359,15 @@ Theoretically, we can set num_leaves = 2^(max_depth) to obtain the same number o
 Its optimal value depends on the number of training samples and num_leaves.<br>
 Setting it to a large value can avoid growing too deep a tree, but may cause under-fitting.<br>
 In practice, setting it to hundreds or thousands is enough for a large dataset.</p>
-<p><strong>max_depth. </strong> You also can use max_depth to limit the tree depth explicitly.</p>
+<p><strong>max_depth </strong> You also can use max_depth to limit the tree depth explicitly.</p>
+<p><strong>min_data_per_group, cat_smooth</strong> is used to deal with over-fitting (when #data is small or #category is large).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[71]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">lgb_model</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">122</span><span class="p">)</span>
@@ -12584,7 +12382,7 @@ In practice, setting it to hundreds or thousands is enough for a large dataset.<
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[17]:</div>
+<div class="prompt output_prompt">Out[71]:</div>
 
 
 
@@ -12607,7 +12405,7 @@ In practice, setting it to hundreds or thousands is enough for a large dataset.<
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[72]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">param_test1</span> <span class="o">=</span> <span class="p">{</span>
@@ -12616,9 +12414,9 @@ In practice, setting it to hundreds or thousands is enough for a large dataset.<
     <span class="s1">&#39;min_data_in_leaf&#39;</span><span class="p">:</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">20</span><span class="p">))</span> 
 <span class="p">}</span>
 <span class="n">gsearch1</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">lgb_model</span><span class="p">,</span> 
-<span class="n">param_grid</span> <span class="o">=</span> <span class="n">param_test1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">iid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">param_grid</span> <span class="o">=</span> <span class="n">param_test1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">iid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">verbose</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">gsearch1</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
-<span class="n">gsearch1</span><span class="o">.</span><span class="n">grid_scores_</span><span class="p">,</span> <span class="n">gsearch1</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">gsearch1</span><span class="o">.</span><span class="n">best_score_</span>
+<span class="n">gsearch1</span><span class="o">.</span><span class="n">best_params_</span><span class="p">,</span> <span class="n">gsearch1</span><span class="o">.</span><span class="n">best_score_</span>
 </pre></div>
 
 </div>
@@ -12632,293 +12430,20 @@ In practice, setting it to hundreds or thousands is enough for a large dataset.<
 <div class="output_area">
 <div class="prompt"></div>
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Fitting 5 folds for each of 45 candidates, totalling 225 fits
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-<div class="prompt"></div>
-
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>[Parallel(n_jobs=4)]: Done   1 tasks      | elapsed:    2.1s
-[Parallel(n_jobs=4)]: Done   2 tasks      | elapsed:    3.1s
-[Parallel(n_jobs=4)]: Done   3 tasks      | elapsed:    4.0s
-[Parallel(n_jobs=4)]: Done   4 tasks      | elapsed:    5.9s
-[Parallel(n_jobs=4)]: Done   5 tasks      | elapsed:    5.9s
-[Parallel(n_jobs=4)]: Done   6 tasks      | elapsed:    6.9s
-[Parallel(n_jobs=4)]: Done   7 tasks      | elapsed:    7.0s
-[Parallel(n_jobs=4)]: Done   8 tasks      | elapsed:    7.6s
-[Parallel(n_jobs=4)]: Done   9 tasks      | elapsed:    7.6s
-[Parallel(n_jobs=4)]: Done  10 tasks      | elapsed:    8.6s
-[Parallel(n_jobs=4)]: Done  11 tasks      | elapsed:    9.3s
-[Parallel(n_jobs=4)]: Done  12 tasks      | elapsed:   10.0s
-[Parallel(n_jobs=4)]: Done  13 tasks      | elapsed:   10.1s
-[Parallel(n_jobs=4)]: Done  14 tasks      | elapsed:   13.3s
-[Parallel(n_jobs=4)]: Done  15 tasks      | elapsed:   13.3s
-[Parallel(n_jobs=4)]: Done  16 tasks      | elapsed:   13.8s
-[Parallel(n_jobs=4)]: Done  17 tasks      | elapsed:   14.3s
-[Parallel(n_jobs=4)]: Done  18 tasks      | elapsed:   14.4s
-[Parallel(n_jobs=4)]: Done  19 tasks      | elapsed:   14.8s
-[Parallel(n_jobs=4)]: Done  20 tasks      | elapsed:   15.5s
-[Parallel(n_jobs=4)]: Done  21 tasks      | elapsed:   16.2s
-[Parallel(n_jobs=4)]: Done  22 tasks      | elapsed:   16.3s
-[Parallel(n_jobs=4)]: Done  23 tasks      | elapsed:   16.7s
-[Parallel(n_jobs=4)]: Done  24 tasks      | elapsed:   17.0s
-[Parallel(n_jobs=4)]: Done  25 tasks      | elapsed:   17.6s
-[Parallel(n_jobs=4)]: Done  26 tasks      | elapsed:   18.2s
-[Parallel(n_jobs=4)]: Done  27 tasks      | elapsed:   18.6s
-[Parallel(n_jobs=4)]: Done  28 tasks      | elapsed:   18.9s
-[Parallel(n_jobs=4)]: Done  29 tasks      | elapsed:   19.2s
-[Parallel(n_jobs=4)]: Done  30 tasks      | elapsed:   19.5s
-[Parallel(n_jobs=4)]: Done  31 tasks      | elapsed:   19.6s
-[Parallel(n_jobs=4)]: Done  32 tasks      | elapsed:   20.0s
-[Parallel(n_jobs=4)]: Done  33 tasks      | elapsed:   20.3s
-[Parallel(n_jobs=4)]: Done  34 tasks      | elapsed:   20.4s
-[Parallel(n_jobs=4)]: Done  35 tasks      | elapsed:   20.9s
-[Parallel(n_jobs=4)]: Done  36 tasks      | elapsed:   23.3s
-[Parallel(n_jobs=4)]: Done  37 tasks      | elapsed:   23.7s
-[Parallel(n_jobs=4)]: Done  38 tasks      | elapsed:   24.2s
-[Parallel(n_jobs=4)]: Done  39 tasks      | elapsed:   24.9s
-[Parallel(n_jobs=4)]: Done  40 tasks      | elapsed:   26.1s
-[Parallel(n_jobs=4)]: Done  41 tasks      | elapsed:   26.8s
-[Parallel(n_jobs=4)]: Done  42 tasks      | elapsed:   27.0s
-[Parallel(n_jobs=4)]: Done  43 tasks      | elapsed:   27.4s
-[Parallel(n_jobs=4)]: Done  44 tasks      | elapsed:   27.8s
-[Parallel(n_jobs=4)]: Done  45 tasks      | elapsed:   28.0s
-[Parallel(n_jobs=4)]: Done  46 tasks      | elapsed:   28.5s
-[Parallel(n_jobs=4)]: Done  47 tasks      | elapsed:   28.6s
-[Parallel(n_jobs=4)]: Done  48 tasks      | elapsed:   28.8s
-[Parallel(n_jobs=4)]: Done  49 tasks      | elapsed:   29.1s
-[Parallel(n_jobs=4)]: Done  50 tasks      | elapsed:   29.4s
-[Parallel(n_jobs=4)]: Done  51 tasks      | elapsed:   30.0s
-[Parallel(n_jobs=4)]: Done  52 tasks      | elapsed:   30.2s
-[Parallel(n_jobs=4)]: Done  53 tasks      | elapsed:   30.6s
-[Parallel(n_jobs=4)]: Done  54 tasks      | elapsed:   30.8s
-[Parallel(n_jobs=4)]: Done  55 tasks      | elapsed:   31.5s
-[Parallel(n_jobs=4)]: Done  56 tasks      | elapsed:   32.2s
-[Parallel(n_jobs=4)]: Done  57 tasks      | elapsed:   32.6s
-[Parallel(n_jobs=4)]: Done  58 tasks      | elapsed:   32.8s
-[Parallel(n_jobs=4)]: Done  59 tasks      | elapsed:   33.3s
-[Parallel(n_jobs=4)]: Done  60 tasks      | elapsed:   33.5s
-[Parallel(n_jobs=4)]: Done  61 tasks      | elapsed:   33.6s
-[Parallel(n_jobs=4)]: Done  62 tasks      | elapsed:   34.1s
-[Parallel(n_jobs=4)]: Done  63 tasks      | elapsed:   34.2s
-[Parallel(n_jobs=4)]: Done  64 tasks      | elapsed:   34.4s
-[Parallel(n_jobs=4)]: Done  65 tasks      | elapsed:   34.7s
-[Parallel(n_jobs=4)]: Done  66 tasks      | elapsed:   35.6s
-[Parallel(n_jobs=4)]: Done  67 tasks      | elapsed:   35.8s
-[Parallel(n_jobs=4)]: Done  68 tasks      | elapsed:   36.0s
-[Parallel(n_jobs=4)]: Done  69 tasks      | elapsed:   36.3s
-[Parallel(n_jobs=4)]: Done  70 tasks      | elapsed:   37.1s
-[Parallel(n_jobs=4)]: Done  71 tasks      | elapsed:   37.7s
-[Parallel(n_jobs=4)]: Done  72 tasks      | elapsed:   38.0s
-[Parallel(n_jobs=4)]: Done  73 tasks      | elapsed:   38.3s
-[Parallel(n_jobs=4)]: Done  74 tasks      | elapsed:   38.7s
-[Parallel(n_jobs=4)]: Done  75 tasks      | elapsed:   38.9s
-[Parallel(n_jobs=4)]: Done  76 tasks      | elapsed:   39.4s
-[Parallel(n_jobs=4)]: Done  77 tasks      | elapsed:   39.6s
-[Parallel(n_jobs=4)]: Done  78 tasks      | elapsed:   40.0s
-[Parallel(n_jobs=4)]: Done  79 tasks      | elapsed:   40.4s
-[Parallel(n_jobs=4)]: Done  80 tasks      | elapsed:   40.8s
-[Parallel(n_jobs=4)]: Done  81 tasks      | elapsed:   41.6s
-[Parallel(n_jobs=4)]: Done  82 tasks      | elapsed:   41.9s
-[Parallel(n_jobs=4)]: Done  83 tasks      | elapsed:   42.2s
-[Parallel(n_jobs=4)]: Done  84 tasks      | elapsed:   42.4s
-[Parallel(n_jobs=4)]: Done  85 tasks      | elapsed:   43.0s
-[Parallel(n_jobs=4)]: Done  86 tasks      | elapsed:   43.8s
-[Parallel(n_jobs=4)]: Done  87 tasks      | elapsed:   44.2s
-[Parallel(n_jobs=4)]: Done  88 tasks      | elapsed:   44.4s
-[Parallel(n_jobs=4)]: Done  89 tasks      | elapsed:   44.9s
-[Parallel(n_jobs=4)]: Done  90 tasks      | elapsed:   45.1s
-[Parallel(n_jobs=4)]: Done  91 tasks      | elapsed:   45.3s
-[Parallel(n_jobs=4)]: Done  92 tasks      | elapsed:   45.6s
-[Parallel(n_jobs=4)]: Done  93 tasks      | elapsed:   45.9s
-[Parallel(n_jobs=4)]: Done  94 tasks      | elapsed:   46.0s
-[Parallel(n_jobs=4)]: Done  95 tasks      | elapsed:   46.4s
-[Parallel(n_jobs=4)]: Done  96 tasks      | elapsed:   47.0s
-[Parallel(n_jobs=4)]: Done  97 tasks      | elapsed:   47.2s
-[Parallel(n_jobs=4)]: Done  98 tasks      | elapsed:   47.4s
-[Parallel(n_jobs=4)]: Done  99 tasks      | elapsed:   47.8s
-[Parallel(n_jobs=4)]: Done 100 tasks      | elapsed:   48.3s
-[Parallel(n_jobs=4)]: Done 101 tasks      | elapsed:   49.1s
-[Parallel(n_jobs=4)]: Done 102 tasks      | elapsed:   49.2s
-[Parallel(n_jobs=4)]: Done 103 tasks      | elapsed:   49.7s
-[Parallel(n_jobs=4)]: Done 104 tasks      | elapsed:   50.0s
-[Parallel(n_jobs=4)]: Done 105 tasks      | elapsed:   50.5s
-[Parallel(n_jobs=4)]: Done 106 tasks      | elapsed:   50.8s
-[Parallel(n_jobs=4)]: Done 107 tasks      | elapsed:   51.0s
-[Parallel(n_jobs=4)]: Done 108 tasks      | elapsed:   51.4s
-[Parallel(n_jobs=4)]: Done 109 tasks      | elapsed:   51.6s
-[Parallel(n_jobs=4)]: Done 110 tasks      | elapsed:   52.1s
-[Parallel(n_jobs=4)]: Done 111 tasks      | elapsed:   52.7s
-[Parallel(n_jobs=4)]: Done 112 tasks      | elapsed:   53.2s
-[Parallel(n_jobs=4)]: Done 113 tasks      | elapsed:   53.5s
-[Parallel(n_jobs=4)]: Done 114 tasks      | elapsed:   53.9s
-[Parallel(n_jobs=4)]: Done 115 tasks      | elapsed:   54.7s
-[Parallel(n_jobs=4)]: Done 116 tasks      | elapsed:   55.6s
-[Parallel(n_jobs=4)]: Done 117 tasks      | elapsed:   55.9s
-[Parallel(n_jobs=4)]: Done 118 tasks      | elapsed:   56.3s
-[Parallel(n_jobs=4)]: Done 119 tasks      | elapsed:   56.7s
-[Parallel(n_jobs=4)]: Done 120 tasks      | elapsed:   57.0s
-[Parallel(n_jobs=4)]: Done 121 tasks      | elapsed:   57.2s
-[Parallel(n_jobs=4)]: Done 122 tasks      | elapsed:   57.5s
-[Parallel(n_jobs=4)]: Done 123 tasks      | elapsed:   58.0s
-[Parallel(n_jobs=4)]: Done 124 tasks      | elapsed:   58.2s
-[Parallel(n_jobs=4)]: Done 125 tasks      | elapsed:   58.7s
-[Parallel(n_jobs=4)]: Done 126 tasks      | elapsed:   59.5s
-[Parallel(n_jobs=4)]: Done 127 tasks      | elapsed:   59.8s
-[Parallel(n_jobs=4)]: Done 128 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 129 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 130 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 131 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 132 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 133 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 134 tasks      | elapsed:  1.0min
-[Parallel(n_jobs=4)]: Done 135 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 136 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 137 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 138 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 139 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 140 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 141 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 142 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 143 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 144 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 145 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 146 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 147 tasks      | elapsed:  1.1min
-[Parallel(n_jobs=4)]: Done 148 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 149 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 150 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 151 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 152 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 153 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 154 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 155 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 156 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 157 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 158 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 159 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 160 tasks      | elapsed:  1.2min
-[Parallel(n_jobs=4)]: Done 161 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 162 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 163 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 164 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 165 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 166 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 167 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 168 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 169 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 170 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 171 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 172 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 173 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 174 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 175 tasks      | elapsed:  1.3min
-[Parallel(n_jobs=4)]: Done 176 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 177 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 178 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 179 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 180 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 181 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 182 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 183 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 184 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 185 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 186 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 187 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 188 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 189 tasks      | elapsed:  1.4min
-[Parallel(n_jobs=4)]: Done 190 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 191 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 192 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 193 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 194 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 195 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 196 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 197 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 198 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 199 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 200 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 201 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 202 tasks      | elapsed:  1.5min
-[Parallel(n_jobs=4)]: Done 203 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 204 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 205 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 206 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 207 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 208 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 209 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 210 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 211 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 212 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 213 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 214 tasks      | elapsed:  1.6min
-[Parallel(n_jobs=4)]: Done 215 tasks      | elapsed:  1.7min
-[Parallel(n_jobs=4)]: Done 216 tasks      | elapsed:  1.7min
-[Parallel(n_jobs=4)]: Done 217 tasks      | elapsed:  1.7min
-[Parallel(n_jobs=4)]: Done 218 tasks      | elapsed:  1.7min
-[Parallel(n_jobs=4)]: Done 225 out of 225 | elapsed:  1.8min finished
-C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_search.py:761: DeprecationWarning: The grid_scores_ attribute was deprecated in version 0.18 in favor of the more elaborate cv_results_ attribute. The grid_scores_ attribute will not be available from 0.20
-  DeprecationWarning)
+<pre>[Parallel(n_jobs=4)]: Done  64 tasks      | elapsed:   30.7s
+[Parallel(n_jobs=4)]: Done 225 out of 225 | elapsed:  1.9min finished
 </pre>
 </div>
 </div>
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[18]:</div>
+<div class="prompt output_prompt">Out[72]:</div>
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>([mean: -0.02796, std: 0.00053, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 10},
-  mean: -0.02657, std: 0.00057, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 30},
-  mean: -0.02667, std: 0.00074, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 50},
-  mean: -0.02772, std: 0.00027, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 10},
-  mean: -0.02665, std: 0.00052, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 30},
-  mean: -0.02640, std: 0.00089, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 50},
-  mean: -0.02772, std: 0.00040, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 10},
-  mean: -0.02640, std: 0.00027, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 30},
-  mean: -0.02628, std: 0.00043, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 50},
-  mean: -0.02781, std: 0.00033, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 10},
-  mean: -0.02654, std: 0.00028, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 30},
-  mean: -0.02633, std: 0.00042, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 50},
-  mean: -0.02874, std: 0.00044, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 10},
-  mean: -0.02752, std: 0.00057, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 30},
-  mean: -0.02731, std: 0.00045, params: {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 50},
-  mean: -0.02804, std: 0.00057, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 10},
-  mean: -0.02712, std: 0.00054, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 30},
-  mean: -0.02714, std: 0.00091, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 50},
-  mean: -0.02783, std: 0.00040, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 10},
-  mean: -0.02680, std: 0.00037, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 30},
-  mean: -0.02654, std: 0.00040, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 50},
-  mean: -0.02775, std: 0.00037, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 10},
-  mean: -0.02663, std: 0.00058, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 30},
-  mean: -0.02651, std: 0.00044, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 50},
-  mean: -0.02786, std: 0.00031, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 10},
-  mean: -0.02674, std: 0.00026, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 30},
-  mean: -0.02677, std: 0.00042, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 50},
-  mean: -0.02869, std: 0.00024, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 10},
-  mean: -0.02764, std: 0.00043, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 30},
-  mean: -0.02776, std: 0.00045, params: {&#39;cat_smooth&#39;: 0.5, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 50},
-  mean: -0.02808, std: 0.00058, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 10},
-  mean: -0.02704, std: 0.00065, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 30},
-  mean: -0.02717, std: 0.00074, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 1, &#39;num_leaves&#39;: 50},
-  mean: -0.02787, std: 0.00033, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 10},
-  mean: -0.02684, std: 0.00037, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 30},
-  mean: -0.02682, std: 0.00049, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 21, &#39;num_leaves&#39;: 50},
-  mean: -0.02782, std: 0.00038, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 10},
-  mean: -0.02666, std: 0.00048, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 30},
-  mean: -0.02679, std: 0.00043, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 50},
-  mean: -0.02790, std: 0.00033, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 10},
-  mean: -0.02673, std: 0.00046, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 30},
-  mean: -0.02675, std: 0.00020, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 61, &#39;num_leaves&#39;: 50},
-  mean: -0.02894, std: 0.00033, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 10},
-  mean: -0.02777, std: 0.00038, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 30},
-  mean: -0.02769, std: 0.00039, params: {&#39;cat_smooth&#39;: 1, &#39;min_data_in_leaf&#39;: 81, &#39;num_leaves&#39;: 50}],
- {&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 50},
+<pre>({&#39;cat_smooth&#39;: 0, &#39;min_data_in_leaf&#39;: 41, &#39;num_leaves&#39;: 50},
  -0.026281361987260575)</pre>
 </div>
 
@@ -12930,7 +12455,7 @@ C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_sea
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[73]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">lgb_model</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">gsearch1</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
@@ -12945,7 +12470,7 @@ C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_sea
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[19]:</div>
+<div class="prompt output_prompt">Out[73]:</div>
 
 
 
@@ -12968,10 +12493,10 @@ C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_sea
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[74]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">lgb_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">eva</span><span class="p">(</span><span class="n">lgb_model</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12983,71 +12508,29 @@ C:\Wesley_Tao\6.Software\Anaconda\lib\site-packages\sklearn\model_selection\_sea
 
 
 <div class="output_area">
-<div class="prompt output_prompt">Out[20]:</div>
+<div class="prompt"></div>
 
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>LGBMRegressor(bagging_fraction=0.8, bagging_freq=1, boosting_type=&#39;gbdt&#39;,
-       cat_smooth=0, class_weight=None, colsample_bytree=1.0,
-       learning_rate=0.1, max_bin=100, max_depth=-1, metric=&#39;rmse&#39;,
-       min_child_samples=20, min_child_weight=0.001, min_data_in_leaf=41,
-       min_split_gain=0.0, n_estimators=122, n_jobs=-1, num_leaves=50,
-       objective=None, random_state=None, reg_alpha=0.0, reg_lambda=0.0,
-       save_binary=True, silent=True, subsample=1.0,
-       subsample_for_bin=200000, subsample_freq=0)</pre>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>cv scores is -0.026281361987260575 cv-std 0.00042892015736722023 
+training time 0.6552460193634033
+test time 0.06382942199707031
+test mean squared error 0.026607985573588906
+</pre>
 </div>
-
 </div>
 
 </div>
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
 <div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_pred</span><span class="o">=</span><span class="n">lgb_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-<span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span><span class="n">y_pred</span><span class="p">)</span> <span class="c1"># untuned random forest results</span>
-</pre></div>
-
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="feature-importance">feature importance<a class="anchor-link" href="#feature-importance">&#182;</a></h2>
 </div>
 </div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-<div class="prompt output_prompt">Out[21]:</div>
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>0.026607985573588906</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">## feature importance </span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -13371,26 +12854,25 @@ gg==
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
 <div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># important features</span>
-<span class="c1"># 1. Location (zip code latitude and longituted)</span>
-<span class="c1"># 2. square foot</span>
-<span class="c1"># 3. grade &amp; condition </span>
-<span class="c1"># 4. Seasonality (seasonl sale)</span>
-<span class="c1"># 5. floor plan (eg 2b3b 2 floor)</span>
-<span class="c1"># 6. renovation</span>
-<span class="c1"># 7. view</span>
-<span class="c1"># 8. waterfront</span>
-</pre></div>
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Important features</p>
+<ol>
+<li>Location (zip code latitude and longituted)</li>
+<li>square foot</li>
+<li>grade &amp; condition </li>
+<li>Seasonality (seasonl sale)</li>
+<li>floor plan (eg 2b3b 2 floor)</li>
+<li>renovation</li>
+<li>view</li>
+<li>waterfront</li>
+</ol>
 
 </div>
 </div>
-</div>
-
 </div>
     </div>
   </div>
